@@ -1,15 +1,20 @@
-const express = require("express");
+const express = require('express');
 const app = express();
-require("dotenv").config();
+require('dotenv').config();
+const cors = require('cors');
+const initRoutes = require('./routes/index');
 
 const PORT = process.env.PORT || 3000;
+app.use(express.json());
+app.use(cors({
+    credentials: true,
+    origin: [ 'http://example.com', '*' ] // whitelist of domains
+}))
 
-app.use('/', () => (
-    console.log('Homepage')
-))
+initRoutes(app);
 
-app.listen(3000, () => {
-    console.log("Server started on port 3000");
+app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
 });
 
 module.exports = app;

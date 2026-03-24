@@ -1,14 +1,14 @@
 {
-  "name": "api-annonces",
+  "name": "assurmoi",
   "version": "1.0.0",
   "description": "",
-  "homepage": "https://github.com/Tr-Evan/RenforcementBackend#readme",
+  "homepage": "https://github.com/NathanRouleau/RenforcementBackend#readme",
   "bugs": {
-    "url": "https://github.com/Tr-Evan/RenforcementBackend/issues"
+    "url": "https://github.com/NathanRouleau/RenforcementBackend/issues"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Tr-Evan/RenforcementBackend.git"
+    "url": "git+https://github.com/NathanRouleau/RenforcementBackend.git"
   },
   "license": "ISC",
   "author": "",
@@ -20,7 +20,13 @@
   },
   "dependencies": {
     "cors": "^2.8.6",
+    "dotenv": "^17.3.1",
     "express": "^5.2.1",
-    "express-validator": "^7.3.1"
+    "express-validator": "^7.3.1",
+    "mariadb": "^3.5.2",
+    "sequelize": "^6.37.8"
+  },
+  "devDependencies": {
+    "sequelize-cli": "^6.6.5"
   }
 }
