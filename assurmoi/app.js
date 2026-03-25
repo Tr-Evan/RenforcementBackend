@@ -1,20 +1,22 @@
-const express = require('express');
-const app = express();
-require('dotenv').config();
-const cors = require('cors');
-const initRoutes = require('./routes/index');
+    const express = require('express')
+    const app = express()
+    require('dotenv').config()
+    const cors = require('cors')
+    const { body, validationResult } = require('express-validator')
+    const initRoutes = require('./routes')
 
-const PORT = process.env.PORT || 3000;
-app.use(express.json());
-app.use(cors({
-    credentials: true,
-    origin: [ 'http://example.com', '*' ] // whitelist of domains
-}))
+    const PORT = process.env.PORT || 3000
 
-initRoutes(app);
+    app.use(express.json())
+    app.use(cors({
+        credentials:true,
+        origin: ['http://exemple.com','*']
+    }))
 
-app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
-});
+    initRoutes(app)
 
-module.exports = app;
+    app.listen(PORT, ()=>{
+        console.log('server running on port',PORT)
+    })
+
+    module.exports = app

@@ -8,15 +8,9 @@ const { Sequelize } = require('sequelize')
 const User = require('./user')
 require('dotenv').config()
 
-// const db_username = process.env.DB_USERNAME || 'root';
 
 const dbInstance = new Sequelize(`mariadb://${process.env.DB_USERNAME}:${process.env.DB_PASSWORD}@${process.env.DB_HOST}:${process.env.DB_PORT}/${process.env.DB_NAME}`, {
-    dialect: 'mariadb',
-    dialectOptions: {
-        ssl: {
-            require: true
-        }
-    }
+  dialect: 'mariadb',
 })
 
 fs
@@ -41,6 +35,6 @@ Object.keys(db).forEach(modelName => {
 });
 
 module.exports = {
-    dbInstance,
-    ...db
+  dbInstance,
+  ...db
 }

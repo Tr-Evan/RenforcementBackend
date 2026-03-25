@@ -1,39 +1,49 @@
-const getAllUsers = (req, res) => {
-    res.status(200).json({ 
-        user: []
-    });
+const { User } = require('../models');
+
+exports.getAllUsers = async (req, res) => {
+  try {
+    const users = await User.findAll();
+    res.json(users);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 };
 
-const getUser = (req, res) => {
-    res.status(200).json({ 
-        user: req.params.id
-    });
+exports.getUser = async (req, res) => {
+  try {
+    const user = await User.findByPk(req.params.id);
+    if (!user) return res.status(404).json({ error: 'Not found' });
+    res.json(user);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 };
 
-const createUser = (req, res) => {
-    const user = req.body;
-    res.status(201).json({ 
-        user
-    });
+exports.createUser = async (req, res) => {
+  try {
+    const user = await User.create(req.body);
+    res.status(201).json(user);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 };
 
-const deleteUser = (req, res) => {
-    res.status(200).json({ 
-        message: `user ${req.params.id} deleted`
-    });
+exports.updateUser = async (req, res) => {
+  try {
+    const [updated] = await User.update(req.body, { where: { id: req.params.id } });
+    if (!updated) return res.status(404).json({ error: 'Not found' });
+    res.json({ message: 'Updated' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 };
 
-const updateUser = (req, res) => {
-    res.status(200).json({ 
-        message: `user ${req.params.id} updated`,
-        user: req.body
-    });
-};
-
-module.exports = {
-    getAllUsers,
-    getUser,
-    createUser,
-    deleteUser,
-    updateUser
+exports.deleteUser = async (req, res) => {
+  try {
+    const deleted = await User.destroy({ where: { id: req.params.id } });
+    if (!deleted) return res.status(404).json({ error: 'Not found' });
+    res.status(204).send();
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 };
