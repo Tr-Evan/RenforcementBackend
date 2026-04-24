@@ -1,20 +1,23 @@
 import { createContext, useContext, useState } from "react";
 
+
 type UserContextValue = {
-    user: any
-    setUser: any
+    username: string|null;
+    firstname: string|null;
+    lastname: string|null;
+    email: string|null;
 }
 
-export const UserContext = createContext<UserContextValue>({user: {}, setUser: () => {}});
+const UserContext = createContext<UserContextValue|undefined>(undefined);
 
-export const UserProvider = ({children}: { children?: any }): any => {
+export const UserProvider = ({ children }: { children?: any }): any => {
     const [user, setUser] = useState(undefined);
 
     return (
-        <UserContext.Provider value={{ user, setUser }}>
+        <UserContext.Provider value={user}>
             {children}
         </UserContext.Provider>
-    )
+    );
 }
 
-export const useCurrentUser = () => useContext(UserContext)
+export const useCurrentUser = () => useContext(UserContext);
