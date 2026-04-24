@@ -4,6 +4,7 @@
     const cors = require('cors')
     const { body, validationResult } = require('express-validator')
     const initRoutes = require('./routes')
+    const { historize } = require('./middlewares/historization')
 
     const PORT = process.env.PORT || 3000
 
@@ -12,6 +13,8 @@
         credentials:true,
         origin: ['http://localhost:8081','*']
     }))
+
+    app.use(historize)
 
     initRoutes(app)
 

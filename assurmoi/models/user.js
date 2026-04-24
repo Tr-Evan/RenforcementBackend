@@ -42,9 +42,9 @@ module.exports = (sequelize) => {
         allowNull: true,
       },
       role: {
-        type: DataTypes.ENUM('ADMIN', 'AGENT', 'EXPERT', 'CLIENT'),
+        type: DataTypes.ENUM('ADMIN', 'PORTFOLIO_MANAGER', 'FOLLOW_UP_OFFICER', 'CUSTOMER_SERVICE_OFFICER', 'INSURED'),
         allowNull: false,
-        defaultValue: 'CLIENT',
+        defaultValue: 'INSURED',
       },
       token: {
         type: DataTypes.TEXT,

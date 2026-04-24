@@ -1,47 +1,44 @@
 'use strict';
+const bcrypt = require('bcrypt')
 
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up (queryInterface, Sequelize) {
-    const roles = await queryInterface.sequelize.query(
-      `SELECT id from roles;`,
-      { type: Sequelize.QueryTypes.SELECT }
-    );
-    const roleAdmin = roles[0] ? roles[0].id : null;
-    const roleAssure = roles[3] ? roles[3].id : null;
+    const saltRounds = parseInt(process.env.BCRYPT_SALT) || 10;
+    const hashedpassword = await bcrypt.hash('password123', saltRounds)
 
-    await queryInterface.bulkInsert('users', [
+    await queryInterface.bulkInsert('user', [
       {
+        username: 'admin',
         email: 'admin@example.com',
-        password_hash: 'admin123',
+        password: hashedpassword,
         firstname: 'Admin',
         lastname: 'Root',
-        role_id: roleAdmin,
-        status: 'active',
-        created_at: new Date()
+        role: 'ADMIN',
+        active: true
       },
       {
+        username: 'jean',
         email: 'jean.dupont@example.com',
-        password_hash: 'password123',
+        password: hashedpassword,
         firstname: 'Jean',
         lastname: 'Dupont',
-        role_id: roleAssure,
-        status: 'active',
-        created_at: new Date()
+        role: 'INSURED',
+        active: true
       },
       {
+        username: 'marie',
         email: 'marie.martin@example.com',
-        password_hash: 'password123',
+        password: hashedpassword,
         firstname: 'Marie',
         lastname: 'Martin',
-        role_id: roleAssure,
-        status: 'active',
-        created_at: new Date()
+        role: 'INSURED',
+        active: true
       }
     ], {});
   },
 
   async down (queryInterface, Sequelize) {
-    await queryInterface.bulkDelete('users', null, {});
+    await queryInterface.bulkDelete('user', null, {});
   }
 };

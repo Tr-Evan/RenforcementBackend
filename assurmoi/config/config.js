@@ -7,12 +7,7 @@ module.exports = {
     database: process.env.DB_NAME,
     host: process.env.DB_HOST,
     port: process.env.DB_PORT,
-    dialect: "mariadb",
-    dialectOptions:{
-        ssl:{
-            require: true
-        }
-    }
+    dialect: "mariadb"
   },
 
   test: {
@@ -21,12 +16,7 @@ module.exports = {
     database: process.env.DB_NAME,
     host: process.env.DB_HOST,
     port: process.env.DB_PORT,
-    dialect: "mariadb",
-    dialectOptions:{
-        ssl:{
-            require: true
-        }
-    }
+    dialect: "mariadb"
   },
 
   production: {
@@ -35,11 +25,6 @@ module.exports = {
     database: process.env.DB_NAME,
     host: process.env.DB_HOST,
     port: process.env.DB_PORT,
-    dialect: "mariadb",
-    dialectOptions:{
-        ssl:{
-            require: true
-        }
-    }
+    dialect: "mariadb"
   }
 };

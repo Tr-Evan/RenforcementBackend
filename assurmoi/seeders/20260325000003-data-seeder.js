@@ -3,7 +3,7 @@
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface, Sequelize) {
-    const users = await queryInterface.sequelize.query(`SELECT id, email FROM users;`, { type: Sequelize.QueryTypes.SELECT });
+    const users = await queryInterface.sequelize.query(`SELECT id, email FROM user;`, { type: Sequelize.QueryTypes.SELECT });
     const adminUser = users.find(u => u.email === 'admin@example.com');
     const assureUser1 = users.find(u => u.email === 'jean.dupont@example.com');
 
@@ -19,8 +19,7 @@ module.exports = {
         date_accident: new Date(),
         contexte: 'Accident sur parking',
         responsabilite_pourcentage: 0,
-        status_validation: 'en_attente',
-        created_by_id: adminUser ? adminUser.id : null,
+        status_validation: 'EN_ATTENTE_VALIDATION',
         assure_id: assureUser1 ? assureUser1.id : null
       }
     ]);
@@ -28,24 +27,15 @@ module.exports = {
     const sinistres = await queryInterface.sequelize.query(`SELECT id FROM sinistres LIMIT 1;`, { type: Sequelize.QueryTypes.SELECT });
     const sinistreId = sinistres[0] ? sinistres[0].id : null;
 
-    const steps = await queryInterface.sequelize.query(`SELECT id FROM workflow_steps LIMIT 1;`, { type: Sequelize.QueryTypes.SELECT });
-    const stepId = steps[0] ? steps[0].id : null;
-
     // Insert Dossier Prise En Charge
-    if (sinistreId && stepId) {
+    if (sinistreId) {
       await queryInterface.bulkInsert('dossiers_prise_en_charge', [
         {
           num_dossier: 'DOS-2026-001',
           sinistre_id: sinistreId,
-          current_step_id: stepId,
-          scenario_type: 1,
+          status: 'INITIALISE',
+          scenario_type: 'REPARABLE',
           date_expertise_planifiee: new Date().toISOString().split('T')[0],
-          date_expertise_effective: null,
-          diagnostic_reparable: null,
-          montant_indemnisation: null,
-          approbation_client_indemnite: null,
-          rib_client_joint: false,
-          facture_tiers_reglee: false,
           is_clos: false
         }
       ]);
@@ -58,10 +48,9 @@ module.exports = {
         {
           sinistre_id: sinistreId,
           dossier_id: dossierId,
-          type_document: 'constat',
+          type_document: 'CONSTAT',
           url_storage: 'https://storage.example.com/docs/constat.pdf',
-          is_validated: false,
-          validated_by_id: null
+          is_validated: false
         }
       ]);
     }
@@ -69,12 +58,11 @@ module.exports = {
     // Insert Logs
     await queryInterface.bulkInsert('logs_actions', [
       {
-        entity_type: 'sinistre',
+        entity_type: 'SINISTRE',
         entity_id: sinistreId,
         user_id: adminUser ? adminUser.id : null,
         action_description: 'Création du sinistre SIN-2026-001',
-        old_status: null,
-        new_status: 'en_attente',
+        new_status: 'EN_ATTENTE_VALIDATION',
         created_at: new Date()
       }
     ]);

@@ -1,26 +1,90 @@
-const { Model } = require('sequelize');
+const { Model, DataTypes } = require('sequelize');
 
-module.exports = (sequelize, DataTypes) => {
+module.exports = (sequelize) => {
   class DossiersPriseEnCharge extends Model {
     static associate(models) {
-      DossiersPriseEnCharge.belongsTo(models.Sinistre, { foreignKey: 'sinistre_id' });
-      DossiersPriseEnCharge.belongsTo(models.WorkflowStep, { foreignKey: 'current_step_id' });
-      DossiersPriseEnCharge.hasMany(models.Document, { foreignKey: 'dossier_id' });
+      DossiersPriseEnCharge.belongsTo(models.Sinistre, { foreignKey: 'sinistre_id', as: 'sinistre' });
+      DossiersPriseEnCharge.belongsTo(models.Document, { foreignKey: 'rapport_expertise_id', as: 'rapportExpertise' });
+      DossiersPriseEnCharge.belongsTo(models.Document, { foreignKey: 'facture_prestataire_id', as: 'facturePrestataire' });
+      DossiersPriseEnCharge.belongsTo(models.Document, { foreignKey: 'rib_assure_id', as: 'ribAssure' });
     }
   }
 
   DossiersPriseEnCharge.init({
-    num_dossier: DataTypes.STRING,
-    sinistre_id: DataTypes.INTEGER,
-    current_step_id: DataTypes.INTEGER,
-    scenario_type: DataTypes.INTEGER,
-    date_expertise_planifiee: DataTypes.DATEONLY,
-    date_expertise_effective: DataTypes.DATEONLY,
+    id: {
+      type: DataTypes.INTEGER,
+      primaryKey: true,
+      autoIncrement: true,
+    },
+    num_dossier: {
+      type: DataTypes.STRING,
+      unique: true,
+      allowNull: false,
+    },
+    sinistre_id: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+    },
+    status: {
+      type: DataTypes.ENUM(
+        'INITIALISE',
+        'EXPERTISE_EN_ATTENTE',
+        'EXPERTISE_PLANIFIEE',
+        'EXPERTISE_REALISEE',
+        'INTERVENTION_A_PLANIFIER',
+        'INTERVENTION_PLANIFIEE',
+        'PRISE_EN_CHARGE_PLANIFIEE',
+        'PRISE_EN_CHARGE_REALISEE',
+        'INTERVENTION_EN_COURS',
+        'RESTITUTION_A_PLANIFIER',
+        'RESTITUTION_EN_COURS',
+        'RESTITUE_ATTENTE_FACTURE',
+        'FACTURE_RECUE',
+        'REGLEMENT_REALISE',
+        'ATTENTE_GARANTIE',
+        'ATTENTE_REF_TIERS',
+        'INDEMNISATION_ESTIMEE',
+        'INDEMNISATION_VALIDEE',
+        'INDEMNISATION_ATTENTE_REGLEMENT',
+        'CLOS'
+      ),
+      defaultValue: 'INITIALISE'
+    },
+    scenario_type: {
+      type: DataTypes.ENUM('REPARABLE', 'NON_REPARABLE'),
+      allowNull: true
+    },
+    // Expertise
+    date_expertise_planifiee: DataTypes.DATE,
+    date_expertise_effective: DataTypes.DATE,
+    date_retour_expertise: DataTypes.DATE,
     diagnostic_reparable: DataTypes.BOOLEAN,
-    montant_indemnisation: DataTypes.DECIMAL(10, 2),
+    rapport_expertise_id: DataTypes.INTEGER,
+
+    // Scenario 1: Reparable
+    date_intervention_planifiee: DataTypes.DATE,
+    date_prise_en_charge_planifiee: DataTypes.DATE,
+    date_prise_en_charge_effective: DataTypes.DATE,
+    date_debut_intervention_effective: DataTypes.DATE,
+    date_fin_intervention: DataTypes.DATE,
+    date_restitution_planifiee: DataTypes.DATE,
+    date_restitution_effective: DataTypes.DATE,
+    date_reception_facture: DataTypes.DATE,
+    facture_prestataire_id: DataTypes.INTEGER,
+    date_reglement_prestataire: DataTypes.DATE,
+
+    // Scenario 2: Non Reparable
+    montant_indemnisation_estime: DataTypes.DECIMAL(10, 2),
     approbation_client_indemnite: DataTypes.BOOLEAN,
-    rib_client_joint: DataTypes.BOOLEAN,
-    facture_tiers_reglee: DataTypes.BOOLEAN,
+    date_previsionnelle_prise_en_charge: DataTypes.DATE,
+    rib_assure_id: DataTypes.INTEGER,
+    date_indemnisation_reglee: DataTypes.DATE,
+
+    // Common
+    facture_tiers_reglee: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false
+    },
     is_clos: {
       type: DataTypes.BOOLEAN,
       defaultValue: false
@@ -29,7 +93,7 @@ module.exports = (sequelize, DataTypes) => {
     sequelize,
     modelName: 'DossiersPriseEnCharge',
     tableName: 'dossiers_prise_en_charge',
-    timestamps: false
+    timestamps: true
   });
 
   return DossiersPriseEnCharge;

@@ -3,12 +3,12 @@ const { Model, DataTypes } = require('sequelize');
 module.exports = (sequelize) => {
   class Document extends Model {
     static associate(models) {
-      Document.hasMany(models.Sinister, { foreignKey: 'cni_driver', as: 'sinistersCni' });
-      Document.hasMany(models.Sinister, { foreignKey: 'vehicule_registration_certificate', as: 'sinistersRegistration' });
-      Document.hasMany(models.Sinister, { foreignKey: 'insurance_certificate', as: 'sinistersInsurance' });
-      Document.hasMany(models.Request, { foreignKey: 'diagnostic_report_file', as: 'requestsDiagnostic' });
-      Document.hasMany(models.Request, { foreignKey: 'case1_contractor_invoice', as: 'requestsInvoice' });
-      Document.hasMany(models.Request, { foreignKey: 'case2_insured_rib', as: 'requestsRib' });
+      Document.hasMany(models.Sinistre, { foreignKey: 'cni_driver_id', as: 'sinistresCni' });
+      Document.hasMany(models.Sinistre, { foreignKey: 'carte_grise_id', as: 'sinistresCarteGrise' });
+      Document.hasMany(models.Sinistre, { foreignKey: 'attestation_assurance_id', as: 'sinistresAttestation' });
+      Document.hasMany(models.DossiersPriseEnCharge, { foreignKey: 'rapport_expertise_id', as: 'dossiersExpertise' });
+      Document.hasMany(models.DossiersPriseEnCharge, { foreignKey: 'facture_prestataire_id', as: 'dossiersFacture' });
+      Document.hasMany(models.DossiersPriseEnCharge, { foreignKey: 'rib_assure_id', as: 'dossiersRib' });
     }
   }
 

@@ -5,20 +5,23 @@ require('dotenv').config()
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up (queryInterface, Sequelize) {
-    const hashedpassword = await bcrypt.hash('MotDeP@ss123', parseInt(process.env.BCRYPT_SALT))
-    await queryInterface.bulkInsert('User', [
+    const saltRounds = parseInt(process.env.BCRYPT_SALT) || 10;
+    const hashedpassword = await bcrypt.hash('MotDeP@ss123', saltRounds)
+    
+    await queryInterface.bulkInsert('user', [
       {
         username: 'saittirite',
         password: hashedpassword,
         firstname: 'Soufian',
         lastname: 'AIT TIRITE',
         email: 's.aittirite@websociety.fr',
-        role: 'superadmin'
+        role: 'ADMIN',
+        active: true
       }
     ], {})
   },
 
   async down (queryInterface, Sequelize) {
-    await queryInterface.bulkDelete('User', { username: 'saittirite' })
+    await queryInterface.bulkDelete('user', { username: 'saittirite' })
   }
 };

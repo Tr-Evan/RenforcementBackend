@@ -1,25 +1,28 @@
 const { Sinistre, User, Document, History, DossiersPriseEnCharge, dbInstance } = require('../models');
 const { sendMailDocumentsRequested } = require('../utils/mailer');
+const { Op } = require('sequelize');
 
 /**
- * Récupère tous les sinistres selon le rôle
+ * Récupère tous les sinistres selon le rôle de l'utilisateur
  */
 const getAllSinistres = async (req, res) => {
   try {
     let query = {};
     
+    // Filtrer selon le rôle
     if (req.user.role === 'CUSTOMER_SERVICE_OFFICER') {
       query.where = { created_by_id: req.user.id };
     } else if (req.user.role === 'INSURED') {
       query.where = { assure_id: req.user.id };
     }
+    // ADMIN et PORTFOLIO_MANAGER voient tous les sinistres
 
     const sinistres = await Sinistre.findAll({
       ...query,
       include: [
         { model: User, as: 'Creator', attributes: ['id', 'username', 'firstname', 'lastname'] },
         { model: User, as: 'Assure', attributes: ['id', 'username', 'firstname', 'lastname', 'email'] },
-        { model: Document }
+        { model: Document, attributes: ['id', 'document_type', 'file_path', 'validation_status'] }
       ],
       order: [['date_accident', 'DESC']]
     });
@@ -32,15 +35,15 @@ const getAllSinistres = async (req, res) => {
 };
 
 /**
- * Récupère un sinistre
+ * Récupère un sinistre spécifique
  */
 const getSinistre = async (req, res) => {
   try {
     const { id } = req.params;
     const sinistre = await Sinistre.findByPk(id, {
       include: [
-        { model: User, as: 'Creator' },
-        { model: User, as: 'Assure' },
+        { model: User, as: 'Creator', attributes: ['id', 'username', 'firstname', 'lastname'] },
+        { model: User, as: 'Assure', attributes: ['id', 'username', 'firstname', 'lastname', 'email'] },
         { model: Document },
         { model: DossiersPriseEnCharge }
       ]
@@ -50,18 +53,21 @@ const getSinistre = async (req, res) => {
       return res.status(404).json({ success: false, error: 'Sinistre not found' });
     }
 
+    // Vérifier les permissions
     if (req.user.role === 'INSURED' && sinistre.assure_id !== req.user.id) {
       return res.status(403).json({ success: false, error: 'Access denied' });
     }
 
     res.json({ success: true, data: sinistre });
   } catch (err) {
+    console.error('Error fetching sinistre:', err);
     res.status(500).json({ success: false, error: err.message });
   }
 };
 
 /**
- * Crée un sinistre
+ * Crée un nouveau sinistre
+ * Rôles autorisés: ADMIN, PORTFOLIO_MANAGER, CUSTOMER_SERVICE_OFFICER
  */
 const createSinistre = async (req, res) => {
   const transaction = await dbInstance.transaction();
@@ -79,23 +85,36 @@ const createSinistre = async (req, res) => {
       assure_id
     } = req.body;
 
-    if (!immatriculation || !conducteur_nom || !conducteur_prenom || !assure_id) {
+    // Validations
+    if (!immatriculation || !conducteur_nom || !conducteur_prenom) {
       return res.status(400).json({ 
         success: false, 
-        error: 'Missing required fields' 
+        error: 'Missing required fields: immatriculation, conducteur_nom, conducteur_prenom' 
       });
     }
 
+    if (!assure_id) {
+      return res.status(400).json({ success: false, error: 'assure_id is required' });
+    }
+
+    // Vérifier que l'assuré existe
     const assure = await User.findByPk(assure_id);
     if (!assure) {
       return res.status(404).json({ success: false, error: 'Assure user not found' });
     }
 
+    // Générer une référence de sinistre unique
     const reference = `SIN-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-    let responsabilite = responsabilite_pourcentage || 0;
-    if (responsabilite === true) responsabilite = 100;
-    if (responsabilite === false) responsabilite = 0;
-    responsabilite = Math.max(0, Math.min(100, parseInt(responsabilite)));
+
+    // Gérer la responsabilité
+    let responsabilite = responsabilite_pourcentage;
+    if (responsabilite === false || responsabilite === 0 || responsabilite === null) {
+      responsabilite = 0;
+    } else if (responsabilite === true) {
+      responsabilite = 100;
+    } else {
+      responsabilite = Math.max(0, Math.min(100, parseInt(responsabilite)));
+    }
 
     const sinistre = await Sinistre.create({
       reference,
@@ -112,6 +131,7 @@ const createSinistre = async (req, res) => {
       assure_id
     }, { transaction });
 
+    // Enregistrer l'action dans l'historique
     await History.create({
       entity_type: 'SINISTRE',
       entity_id: sinistre.id,
@@ -123,6 +143,7 @@ const createSinistre = async (req, res) => {
 
     await transaction.commit();
 
+    // Envoyer une notification à l'assuré
     await sendMailDocumentsRequested(assure, {
       type: 'SINISTRE_CREATED',
       reference: sinistre.reference
@@ -135,6 +156,7 @@ const createSinistre = async (req, res) => {
     });
   } catch (err) {
     await transaction.rollback();
+    console.error('Error creating sinistre:', err);
     res.status(500).json({ success: false, error: err.message });
   }
 };
@@ -144,6 +166,7 @@ const createSinistre = async (req, res) => {
  */
 const updateSinistre = async (req, res) => {
   const transaction = await dbInstance.transaction();
+
   try {
     const { id } = req.params;
     const sinistre = await Sinistre.findByPk(id);
@@ -153,14 +176,29 @@ const updateSinistre = async (req, res) => {
       return res.status(404).json({ success: false, error: 'Sinistre not found' });
     }
 
+    // Vérifier les permissions
     if (req.user.role === 'CUSTOMER_SERVICE_OFFICER' && sinistre.created_by_id !== req.user.id) {
       await transaction.rollback();
       return res.status(403).json({ success: false, error: 'Access denied' });
     }
 
-    const oldData = sinistre.dataValues;
-    await sinistre.update(req.body, { transaction });
+    const updatedData = { ...req.body };
+    
+    // Gérer la responsabilité
+    if (updatedData.responsabilite_pourcentage !== undefined) {
+      if (updatedData.responsabilite_pourcentage === false || updatedData.responsabilite_pourcentage === 0) {
+        updatedData.responsabilite_pourcentage = 0;
+      } else if (updatedData.responsabilite_pourcentage === true) {
+        updatedData.responsabilite_pourcentage = 100;
+      } else {
+        updatedData.responsabilite_pourcentage = Math.max(0, Math.min(100, parseInt(updatedData.responsabilite_pourcentage)));
+      }
+    }
 
+    const oldData = sinistre.dataValues;
+    await sinistre.update(updatedData, { transaction });
+
+    // Enregistrer l'action dans l'historique
     await History.create({
       entity_type: 'SINISTRE',
       entity_id: sinistre.id,
@@ -171,44 +209,58 @@ const updateSinistre = async (req, res) => {
     }, { transaction });
 
     await transaction.commit();
-    res.json({ success: true, data: sinistre });
+
+    res.json({ 
+      success: true, 
+      data: sinistre,
+      message: 'Sinistre updated successfully'
+    });
   } catch (err) {
     await transaction.rollback();
+    console.error('Error updating sinistre:', err);
     res.status(500).json({ success: false, error: err.message });
   }
 };
 
 /**
- * Valide un sinistre
+ * Valide un sinistre (PORTFOLIO_MANAGER ou ADMIN uniquement)
  */
 const validateSinistre = async (req, res) => {
   const transaction = await dbInstance.transaction();
+
   try {
     const { id } = req.params;
     const { status_validation } = req.body;
 
-    if (!['VALIDE', 'REJETE'].includes(status_validation)) {
-      return res.status(400).json({ success: false, error: 'Status invalide' });
+    if (!['VALIDÉ', 'REJETÉ'].includes(status_validation)) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'status_validation must be VALIDÉ or REJETÉ' 
+      });
     }
 
     const sinistre = await Sinistre.findByPk(id, { transaction });
+
     if (!sinistre) {
       await transaction.rollback();
-      return res.status(404).json({ success: false, error: 'Sinistre introuvable' });
+      return res.status(404).json({ success: false, error: 'Sinistre not found' });
     }
 
     await sinistre.update({ status_validation }, { transaction });
 
-    if (status_validation === 'VALIDE') {
+    // Si validé, créer automatiquement un dossier de prise en charge
+    if (status_validation === 'VALIDÉ') {
       const numDossier = `DOS-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
       await DossiersPriseEnCharge.create({
         num_dossier: numDossier,
         sinistre_id: sinistre.id,
-        status: 'INITIALISE',
+        current_step_id: 1, // Étape initiale
+        scenario_type: null,
         is_clos: false
       }, { transaction });
     }
 
+    // Enregistrer l'action dans l'historique
     await History.create({
       entity_type: 'SINISTRE',
       entity_id: sinistre.id,
@@ -219,9 +271,24 @@ const validateSinistre = async (req, res) => {
     }, { transaction });
 
     await transaction.commit();
-    res.json({ success: true, data: sinistre });
+
+    // Notifier l'assuré
+    const assure = await User.findByPk(sinistre.assure_id);
+    if (assure) {
+      await sendMailDocumentsRequested(assure, {
+        type: 'SINISTRE_' + status_validation,
+        reference: sinistre.reference
+      }).catch(err => console.error('Email error:', err));
+    }
+
+    res.json({ 
+      success: true, 
+      data: sinistre,
+      message: `Sinistre ${status_validation.toLowerCase()}`
+    });
   } catch (err) {
     await transaction.rollback();
+    console.error('Error validating sinistre:', err);
     res.status(500).json({ success: false, error: err.message });
   }
 };
@@ -231,6 +298,7 @@ const validateSinistre = async (req, res) => {
  */
 const deleteSinistre = async (req, res) => {
   const transaction = await dbInstance.transaction();
+
   try {
     const { id } = req.params;
     const sinistre = await Sinistre.findByPk(id, { transaction });
@@ -243,23 +311,33 @@ const deleteSinistre = async (req, res) => {
     const numDossiers = await DossiersPriseEnCharge.count({ where: { sinistre_id: id } });
     if (numDossiers > 0) {
       await transaction.rollback();
-      return res.status(400).json({ success: false, error: 'Cannot delete sinistre with dossiers' });
+      return res.status(400).json({ 
+        success: false, 
+        error: 'Cannot delete sinistre with active dossiers' 
+      });
     }
 
+    // Enregistrer l'action avant suppression
     await History.create({
       entity_type: 'SINISTRE',
       entity_id: sinistre.id,
       action: 'DELETE',
       user_id: req.user.id,
-      action_date: new Date()
+      action_date: new Date(),
+      details: JSON.stringify({ deleted_data: sinistre.dataValues })
     }, { transaction });
 
     await sinistre.destroy({ transaction });
+
     await transaction.commit();
 
-    res.json({ success: true, message: 'Sinistre deleted' });
+    res.json({ 
+      success: true,
+      message: 'Sinistre deleted successfully'
+    });
   } catch (err) {
     await transaction.rollback();
+    console.error('Error deleting sinistre:', err);
     res.status(500).json({ success: false, error: err.message });
   }
 };

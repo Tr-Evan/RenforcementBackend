@@ -1,30 +1,23 @@
 const userRoutes = require('./users')
-const sinisterRoutes = require('./sinisters')
+const sinistreRoutes = require('./sinistres')
+const dossierRoutes = require('./dossiers')
 const documentRoutes = require('./documents')
-const requestRoutes = require('./requests')
 const historiesRoutes = require('./histories')
-const workflowRoutes = require('./workflows')
 const authRoutes = require('./auth')
-
-
+const rgpdRoutes = require('./rgpd')
 
 function initRoutes(app){
-
-    app.use('/user',userRoutes)
-    app.use('/sinisters', sinisterRoutes)
+    app.use('/auth', authRoutes)
+    app.use('/user', userRoutes)
+    app.use('/sinistres', sinistreRoutes)
+    app.use('/dossiers', dossierRoutes)
     app.use('/documents', documentRoutes)
-    app.use('/requests', requestRoutes)
     app.use('/histories', historiesRoutes)
-    app.use('/workflows', workflowRoutes)
-    app.use('/auth',authRoutes)
+    app.use('/rgpd', rgpdRoutes)
     
-    app.get ('/',(req, res,next)=> {
-        console.log('middleware Homepage')
-        next()
-    },(req, res,next)=>{
-        console.log('Controller Homepage')
+    app.get('/', (req, res) => {
         res.status(200).json({
-            message: "Bienvenu sur la page d'accueil"
+            message: "Bienvenue sur l'API AssurMoi"
         })
     })
 }
