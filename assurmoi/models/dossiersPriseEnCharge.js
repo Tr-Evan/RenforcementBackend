@@ -61,7 +61,7 @@ module.exports = (sequelize) => {
     diagnostic_reparable: DataTypes.BOOLEAN,
     rapport_expertise_id: DataTypes.INTEGER,
 
-    // Scenario 1: Reparable
+    // Reparable
     date_intervention_planifiee: DataTypes.DATE,
     date_prise_en_charge_planifiee: DataTypes.DATE,
     date_prise_en_charge_effective: DataTypes.DATE,
@@ -73,7 +73,7 @@ module.exports = (sequelize) => {
     facture_prestataire_id: DataTypes.INTEGER,
     date_reglement_prestataire: DataTypes.DATE,
 
-    // Scenario 2: Non Reparable
+    // Non Reparable
     montant_indemnisation_estime: DataTypes.DECIMAL(10, 2),
     approbation_client_indemnite: DataTypes.BOOLEAN,
     date_previsionnelle_prise_en_charge: DataTypes.DATE,

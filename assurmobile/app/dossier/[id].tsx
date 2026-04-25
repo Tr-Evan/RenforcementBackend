@@ -120,7 +120,7 @@ export default function DossierDetailScreen() {
                         {dossier.status === 'INDEMNISATION_VALIDEE' && user?.role === 'INSURED' && (
                             <Button mode="contained" onPress={() => handleNextStep('INDEMNISATION_ATTENTE_REGLEMENT', { 
                                 date_previsionnelle_prise_en_charge: new Date(),
-                                rib_assure_id: 1 // Simulation
+                                rib_assure_id: 1
                             })}>
                                 Fournir le RIB
                             </Button>

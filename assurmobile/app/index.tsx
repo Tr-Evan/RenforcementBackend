@@ -30,14 +30,12 @@ export default function Index() {
 
   useEffect(() => {
     if (user) {
-      // Charger les sinistres
       fetchData('/sinistres', 'GET', {}, true)
         .then(res => {
           if (res.success) setSinistres(res.data);
         })
         .catch(err => console.log('Error loading sinistres', err));
 
-      // Charger les dossiers
       fetchData('/dossiers', 'GET', {}, true)
         .then(res => {
           if (res.success) setDossiers(res.data);

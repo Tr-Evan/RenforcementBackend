@@ -2,13 +2,13 @@
   "name": "assurmoi",
   "version": "1.0.0",
   "description": "",
-  "homepage": "https://github.com/JulienPajot/RenforcementBackendNodeJS#readme",
+  "homepage": "https://github.com/Tr-Evan/RenforcementBackend#readme",
   "bugs": {
-    "url": "https://github.com/JulienPajot/RenforcementBackendNodeJS/issues"
+    "url": "https://github.com/Tr-Evan/RenforcementBackend.git/issues"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/JulienPajot/RenforcementBackendNodeJS.git"
+    "url": "git+https://github.com/Tr-Evan/RenforcementBackend.git"
   },
   "license": "ISC",
   "author": "",

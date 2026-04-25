@@ -5,7 +5,6 @@ const path = require('path');
 
 console.log('Resetting Assurmobile project...');
 
-// Clean node_modules and reinstall
 console.log('Installing dependencies...');
 const { execSync } = require('child_process');
 

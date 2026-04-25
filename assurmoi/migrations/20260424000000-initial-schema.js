@@ -2,13 +2,13 @@
 
 module.exports = {
   async up(queryInterface, Sequelize) {
-    // 1. Roles
+    // Roles
     await queryInterface.createTable('roles', {
       id: { type: Sequelize.INTEGER, autoIncrement: true, primaryKey: true },
       label: { type: Sequelize.STRING, allowNull: false }
     });
 
-    // 2. User
+    // User
     await queryInterface.createTable('user', {
       id: { type: Sequelize.INTEGER, autoIncrement: true, primaryKey: true },
       username: { type: Sequelize.STRING, unique: true, allowNull: false },
@@ -26,7 +26,7 @@ module.exports = {
       active: { type: Sequelize.BOOLEAN, defaultValue: true }
     });
 
-    // 3. Documents
+    // Documents
     await queryInterface.createTable('documents', {
       id: { type: Sequelize.INTEGER, autoIncrement: true, primaryKey: true },
       sinistre_id: { type: Sequelize.INTEGER },
@@ -39,7 +39,7 @@ module.exports = {
       updatedAt: { type: Sequelize.DATE, defaultValue: Sequelize.literal('CURRENT_TIMESTAMP') }
     });
 
-    // 4. Sinistres
+    // Sinistres
     await queryInterface.createTable('sinistres', {
       id: { type: Sequelize.INTEGER, autoIncrement: true, primaryKey: true },
       reference: { type: Sequelize.STRING, unique: true },
@@ -63,7 +63,7 @@ module.exports = {
       updatedAt: { type: Sequelize.DATE, defaultValue: Sequelize.literal('CURRENT_TIMESTAMP') }
     });
 
-    // 5. Dossiers de prise en charge
+    // Dossiers de prise en charge
     await queryInterface.createTable('dossiers_prise_en_charge', {
       id: { type: Sequelize.INTEGER, autoIncrement: true, primaryKey: true },
       num_dossier: { type: Sequelize.STRING, unique: true },
@@ -104,7 +104,7 @@ module.exports = {
       updatedAt: { type: Sequelize.DATE, defaultValue: Sequelize.literal('CURRENT_TIMESTAMP') }
     });
 
-    // 6. Logs Actions
+    // Logs Actions
     await queryInterface.createTable('logs_actions', {
       id: { type: Sequelize.INTEGER, autoIncrement: true, primaryKey: true },
       entity_type: { type: Sequelize.STRING },
